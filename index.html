@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Thiago - Fisioterapia | Agendamento Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #4facfe;
+            animation: pulse 2s infinite;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .date-time-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .time-slot:hover {
+            border-color: #4facfe;
+            background: #f0f9ff;
+        }
+
+        .time-slot.selected {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .time-slot.booked {
+            background: #ff6b6b;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .whatsapp-note {
+            background: #25d366;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .appointments-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .appointment-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4facfe;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .appointment-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .appointment-details h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .appointment-details p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #ff5252;
+        }
+
+        .success-message {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .date-time-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-slots {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">FISIO<br>TERAPIA</div>
+            <h1>Dr. Thiago</h1>
+            <p>Fisioterapia & Reabilitação</p>
+        </div>
+
+        <div class="content">
+            <div class="whatsapp-note">
+                📱 Após agendar, você será redirecionado para o WhatsApp para confirmar com o Dr. Thiago
+            </div>
+
+            <div class="success-message" id="successMessage">
+                Agendamento realizado com sucesso! ✅
+            </div>
+
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label for="patientName">Nome do Paciente:</label>
+                    <input type="text" id="patientName" name="patientName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefone:</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+
+                <div class="date-time-container">
+                    <div class="form-group">
+                        <label for="appointmentDate">Data:</label>
+                        <input type="date" id="appointmentDate" name="appointmentDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Horário Disponível:</label>
+                        <div class="time-slots" id="timeSlots">
+                            <!-- Horários serão gerados dinamicamente -->
+                        </div>
+                        <input type="hidden" id="selectedTime" name="selectedTime" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="treatment">Tipo de Tratamento:</label>
+                    <select id="treatment" name="treatment" required>
+                        <option value="">Selecione o tratamento</option>
+                        <option value="fisioterapia-ortopedica">Fisioterapia Ortopédica</option>
+                        <option value="fisioterapia-neurologica">Fisioterapia Neurológica</option>
+                        <option value="fisioterapia-respiratoria">Fisioterapia Respiratória</option>
+                        <option value="pilates-clinico">Pilates Clínico</option>
+                        <option value="acupuntura">Acupuntura</option>
+                        <option value="massoterapia">Massoterapia</option>
+                        <option value="avaliacao-inicial">Avaliação Inicial</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="observations">Observações:</label>
+                    <textarea id="observations" name="observations" rows="3" placeholder="Descreva brevemente o motivo da consulta ou observações importantes..."></textarea>
+                </div>
+
+                <button type="submit" class="btn">Agendar Consulta</button>
+            </form>
+
+            <div class="appointments-section">
+                <h3>Agendamentos do Dia</h3>
+                <div id="appointmentsList">
+                    <p style="text-align: center; color: #666; margin-top: 20px;">Nenhum agendamento para hoje.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos agendamentos armazenados em memória
+        let appointments = [];
+        
+        // Número do WhatsApp do Dr. Thiago
+        const WHATSAPP_NUMBER = '5534991063450';
+        
+        // Horários disponíveis (7:00 às 18:00, de 30 em 30 minutos)
+        const timeSlots = [
+            '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
+            '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+            '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+            '16:00', '16:30', '17:00', '17:30', '18:00'
+        ];
+
+        // Gerar horários na página
+        function generateTimeSlots() {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+            
+            timeSlots.forEach(time => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = time;
+                slot.dataset.time = time;
+                
+                slot.addEventListener('click', function() {
+                    // Remove seleção anterior
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    
+                    // Adiciona seleção atual
+                    if (!this.classList.contains('booked')) {
+                        this.classList.add('selected');
+                        document.getElementById('selectedTime').value = time;
+                    }
+                });
+                
+                timeSlotsContainer.appendChild(slot);
+            });
+        }
+
+        // Atualizar horários baseado na data selecionada
+        function updateAvailableSlots() {
+            const selectedDate = document.getElementById('appointmentDate').value;
+            if (!selectedDate) return;
+
+            // Limpar seleções
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected', 'booked');
+            });
+            document.getElementById('selectedTime').value = '';
+
+            // Marcar horários já agendados
+            const dayAppointments = appointments.filter(apt => apt.date === selectedDate);
+            dayAppointments.forEach(apt => {
+                const slot = document.querySelector(`[data-time="${apt.time}"]`);
+                if (slot) {
+                    slot.classList.add('booked');
+                    slot.textContent = `${apt.time} - Ocupado`;
+                }
+            });
+        }
+
+        // Exibir agendamentos do dia
+        function displayTodayAppointments() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayAppointments = appointments.filter(apt => apt.date === today);
+            const appointmentsList = document.getElementById('appointmentsList');
+
+            if (todayAppointments.length === 0) {
+                appointmentsList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Nenhum agendamento para hoje.</p>';
+                return;
+            }
+
+            appointmentsList.innerHTML = todayAppointments.map((apt, index) => `
+                <div class="appointment-card">
+                    <div class="appointment-info">
+                        <div class="appointment-details">
+                            <h4>${apt.patientName}</h4>
+                            <p><strong>Horário:</strong> ${apt.time} | <strong>Tratamento:</strong> ${apt.treatment}</p>
+                            <p><strong>Telefone:</strong> ${apt.phone}</p>
+                            ${apt.observations ? `<p><strong>Obs:</strong> ${apt.observations}</p>` : ''}
+                        </div>
+                        <button class="delete-btn" onclick="deleteAppointment(${apt.id})">Cancelar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Função para enviar para WhatsApp
+        function sendToWhatsApp(appointmentData) {
+            const treatmentNames = {
+                'fisioterapia-ortopedica': 'Fisioterapia Ortopédica',
+                'fisioterapia-neurologica': 'Fisioterapia Neurológica',
+                'fisioterapia-respiratoria': 'Fisioterapia Respiratória',
+                'pilates-clinico': 'Pilates Clínico',
+                'acupuntura': 'Acupuntura',
+                'massoterapia': 'Massoterapia',
+                'avaliacao-inicial': 'Avaliação Inicial'
+            };
+
+            const treatmentName = treatmentNames[appointmentData.treatment] || appointmentData.treatment;
+            const formattedDate = new Date(appointmentData.date + 'T00:00:00').toLocaleDateString('pt-BR');
+            
+            let message = `🏥 *NOVO AGENDAMENTO - DR. THIAGO FISIOTERAPIA*\n\n`;
+            message += `👤 *Paciente:* ${appointmentData.patientName}\n`;
+            message += `📞 *Telefone:* ${appointmentData.phone}\n`;
+            message += `📅 *Data:* ${formattedDate}\n`;
+            message += `⏰ *Horário:* ${appointmentData.time}\n`;
+            message += `🩺 *Tratamento:* ${treatmentName}\n`;
+            
+            if (appointmentData.observations) {
+                message += `📝 *Observações:* ${appointmentData.observations}\n`;
+            }
+            
+            message += `\n✅ Agendamento confirmado através do site!`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Deletar agendamento
+        function deleteAppointment(id) {
+            if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
+                appointments = appointments.filter(apt => apt.id !== id);
+                displayTodayAppointments();
+                updateAvailableSlots();
+            }
+        }
+
+        // Processar formulário
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const appointmentData = {
+                id: Date.now(),
+                patientName: formData.get('patientName'),
+                phone: formData.get('phone'),
+                date: formData.get('appointmentDate'),
+                time: formData.get('selectedTime'),
+                treatment: formData.get('treatment'),
+                observations: formData.get('observations')
+            };
+
+            // Validar se horário foi selecionado
+            if (!appointmentData.time) {
+                alert('Por favor, selecione um horário disponível.');
+                return;
+            }
+
+            // Verificar se horário já está ocupado
+            const isTimeBooked = appointments.some(apt => 
+                apt.date === appointmentData.date && apt.time === appointmentData.time
+            );
+
+            if (isTimeBooked) {
+                alert('Este horário já está ocupado. Por favor, escolha outro horário.');
+                return;
+            }
+
+            // Adicionar agendamento
+            appointments.push(appointmentData);
+
+            // Enviar para WhatsApp
+            sendToWhatsApp(appointmentData);
+
+            // Mostrar mensagem de sucesso
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+
+            // Limpar formulário
+            this.reset();
+            document.getElementById('selectedTime').value = '';
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+
+            // Atualizar displays
+            displayTodayAppointments();
+            updateAvailableSlots();
+        });
+
+        // Event listeners
+        document.getElementById('appointmentDate').addEventListener('change', updateAvailableSlots);
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTimeSlots();
+            
+            // Definir data mínima como hoje
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').min = today;
+            
+            displayTodayAppointments();
+        });
+    </script>
+</body>
+</html>
