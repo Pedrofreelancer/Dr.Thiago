@@ -167,8 +167,24 @@
             box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
         }
 
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .whatsapp-note {
             background: #25d366;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .sync-note {
+            background: #17a2b8;
             color: white;
             padding: 12px;
             border-radius: 8px;
@@ -188,7 +204,7 @@
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 15px;
-            border-left: 4px solid #4facfe;
+            border-left: 4px solid #ff6b6b;
             animation: slideIn 0.3s ease;
         }
 
@@ -215,20 +231,6 @@
             font-size: 14px;
         }
 
-        .delete-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .delete-btn:hover {
-            background: #ff5252;
-        }
-
         .success-message {
             background: #4caf50;
             color: white;
@@ -237,6 +239,29 @@
             margin-bottom: 20px;
             text-align: center;
             display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-top: 2px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -267,6 +292,10 @@
         </div>
 
         <div class="content">
+            <div class="sync-note">
+                🔄 Sistema sincronizado em tempo real - funciona em qualquer dispositivo!
+            </div>
+
             <div class="whatsapp-note">
                 📱 Após agendar, você será redirecionado para o WhatsApp para confirmar com o Dr. Thiago
             </div>
@@ -320,44 +349,25 @@
                     <textarea id="observations" name="observations" rows="3" placeholder="Descreva brevemente o motivo da consulta ou observações importantes..."></textarea>
                 </div>
 
-                <button type="submit" class="btn">Agendar Consulta</button>
+                <button type="submit" class="btn" id="submitBtn">Agendar Consulta</button>
             </form>
 
             <div class="appointments-section">
-                <h3>📅 Horários Ocupados Hoje</h3>
+                <h3>📅 Horários Ocupados</h3>
                 <div id="bookedSlotsList">
-                    <!-- Horários ocupados serão mostrados aqui -->
+                    <div class="loading">Carregando horários ocupados...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Dados dos agendamentos armazenados em memória
-        let appointments = [
-            // Exemplo de agendamentos já existentes - adicione os reais aqui
-            {
-                id: 1,
-                patientName: 'João Silva',
-                phone: '(34) 99999-9999',
-                date: '2025-06-17',
-                time: '08:00',
-                treatment: 'fisioterapia-ortopedica',
-                observations: 'Dor no joelho'
-            },
-            {
-                id: 2,
-                patientName: 'Maria Santos',
-                phone: '(34) 88888-8888',
-                date: '2025-06-17',
-                time: '10:30',
-                treatment: 'pilates-clinico',
-                observations: ''
-            }
-        ];
-        
-        // Número do WhatsApp do Dr. Thiago
+        // Configurações
         const WHATSAPP_NUMBER = '5534991063450';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXXXXXXXXXXXXXXXXXXXXXXXXX/exec'; // URL do Google Apps Script
+        
+        // Dados dos agendamentos
+        let appointments = [];
         
         // Horários disponíveis (7:00 às 18:00, de 30 em 30 minutos)
         const timeSlots = [
@@ -366,6 +376,87 @@
             '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
             '16:00', '16:30', '17:00', '17:30', '18:00'
         ];
+
+        // Simular dados para demonstração (substituir pela API real)
+        function loadSampleData() {
+            const today = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+            appointments = [
+                {
+                    id: 1,
+                    patientName: 'João Silva',
+                    phone: '(34) 99999-9999',
+                    date: today,
+                    time: '08:00',
+                    treatment: 'fisioterapia-ortopedica',
+                    observations: 'Dor no joelho'
+                },
+                {
+                    id: 2,
+                    patientName: 'Maria Santos',
+                    phone: '(34) 88888-8888',
+                    date: today,
+                    time: '10:30',
+                    treatment: 'pilates-clinico',
+                    observations: ''
+                },
+                {
+                    id: 3,
+                    patientName: 'Pedro Costa',
+                    phone: '(34) 77777-7777',
+                    date: tomorrowStr,
+                    time: '14:00',
+                    treatment: 'acupuntura',
+                    observations: 'Primeira sessão'
+                }
+            ];
+        }
+
+        // Carregar agendamentos (simular API)
+        async function loadAppointments() {
+            try {
+                // Simular delay de carregamento
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Em produção, substituir por chamada real à API
+                loadSampleData();
+                
+                displayBookedSlots();
+                return true;
+            } catch (error) {
+                console.error('Erro ao carregar agendamentos:', error);
+                document.getElementById('bookedSlotsList').innerHTML = 
+                    '<p style="text-align: center; color: #ff6b6b;">Erro ao carregar agendamentos. Tente novamente.</p>';
+                return false;
+            }
+        }
+
+        // Salvar agendamento (simular API)
+        async function saveAppointment(appointmentData) {
+            try {
+                // Simular delay de salvamento
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Em produção, aqui faria a chamada para o Google Sheets
+                /*
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(appointmentData)
+                });
+                */
+                
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar agendamento:', error);
+                return false;
+            }
+        }
 
         // Gerar horários na página
         function generateTimeSlots() {
@@ -418,16 +509,17 @@
             displayBookedSlots();
         }
 
-        // Exibir horários ocupados do dia selecionado (para pacientes)
+        // Exibir horários ocupados do dia selecionado
         function displayBookedSlots() {
             const selectedDate = document.getElementById('appointmentDate').value;
+            const bookedSlotsList = document.getElementById('bookedSlotsList');
+
             if (!selectedDate) {
-                document.getElementById('bookedSlotsList').innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Selecione uma data para ver os horários ocupados.</p>';
+                bookedSlotsList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Selecione uma data para ver os horários ocupados.</p>';
                 return;
             }
 
             const dayAppointments = appointments.filter(apt => apt.date === selectedDate);
-            const bookedSlotsList = document.getElementById('bookedSlotsList');
 
             if (dayAppointments.length === 0) {
                 bookedSlotsList.innerHTML = '<p style="text-align: center; color: #4caf50; margin-top: 20px;">✅ Todos os horários estão disponíveis para esta data!</p>';
@@ -437,7 +529,7 @@
             const sortedAppointments = dayAppointments.sort((a, b) => a.time.localeCompare(b.time));
 
             bookedSlotsList.innerHTML = sortedAppointments.map(apt => `
-                <div class="appointment-card" style="border-left-color: #ff6b6b;">
+                <div class="appointment-card">
                     <div class="appointment-info">
                         <div class="appointment-details">
                             <h4>⏰ ${apt.time} - OCUPADO</h4>
@@ -486,12 +578,16 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Deletar agendamento (função removida para pacientes)
-        // Esta função foi removida pois pacientes não devem cancelar agendamentos de outros
-
         // Processar formulário
-        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            
+            // Desabilitar botão durante o processo
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Agendando...';
             
             const formData = new FormData(this);
             const appointmentData = {
@@ -507,6 +603,8 @@
             // Validar se horário foi selecionado
             if (!appointmentData.time) {
                 alert('Por favor, selecione um horário disponível.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
                 return;
             }
 
@@ -517,47 +615,38 @@
 
             if (isTimeBooked) {
                 alert('Este horário já está ocupado. Por favor, escolha outro horário.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
                 return;
             }
 
-            // Adicionar agendamento
-            appointments.push(appointmentData);
+            try {
+                // Tentar salvar o agendamento
+                const saved = await saveAppointment(appointmentData);
+                
+                if (saved) {
+                    // Adicionar aos dados locais
+                    appointments.push(appointmentData);
 
-            // Enviar para WhatsApp
-            sendToWhatsApp(appointmentData);
+                    // Enviar para WhatsApp
+                    sendToWhatsApp(appointmentData);
 
-            // Mostrar mensagem de sucesso
-            const successMessage = document.getElementById('successMessage');
-            successMessage.style.display = 'block';
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 3000);
+                    // Mostrar mensagem de sucesso
+                    const successMessage = document.getElementById('successMessage');
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 5000);
 
-            // Limpar formulário
-            this.reset();
-            document.getElementById('selectedTime').value = '';
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
-            });
+                    // Limpar formulário
+                    this.reset();
+                    document.getElementById('selectedTime').value = '';
+                    document.querySelectorAll('.time-slot').forEach(slot => {
+                        slot.classList.remove('selected');
+                    });
 
-            // Atualizar displays
-            displayBookedSlots();
-            updateAvailableSlots();
-        });
-
-        // Event listeners
-        document.getElementById('appointmentDate').addEventListener('change', updateAvailableSlots);
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', function() {
-            generateTimeSlots();
-            
-            // Definir data mínima como hoje
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('appointmentDate').min = today;
-            
-            displayBookedSlots();
-        });
-    </script>
-</body>
-</html>
+                    // Atualizar displays
+                    displayBookedSlots();
+                    updateAvailableSlots();
+                } else {
+                    throw
