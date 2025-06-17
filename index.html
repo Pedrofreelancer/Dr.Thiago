@@ -355,7 +355,7 @@
             <div class="appointments-section">
                 <h3>📅 Horários Ocupados</h3>
                 <div id="bookedSlotsList">
-                    <div class="loading">Carregando horários ocupados...</div>
+                    <p style="text-align: center; color: #666; margin-top: 20px;">Selecione uma data para ver os horários ocupados.</p>
                 </div>
             </div>
         </div>
@@ -364,10 +364,11 @@
     <script>
         // Configurações
         const WHATSAPP_NUMBER = '5534991063450';
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXXXXXXXXXXXXXXXXXXXXXXXXX/exec'; // URL do Google Apps Script
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXXXXXXXXXXXXXXXXXXXXXXXXX/exec';
         
         // Dados dos agendamentos
         let appointments = [];
+        let isLoading = false;
         
         // Horários disponíveis (7:00 às 18:00, de 30 em 30 minutos)
         const timeSlots = [
@@ -377,7 +378,7 @@
             '16:00', '16:30', '17:00', '17:30', '18:00'
         ];
 
-        // Simular dados para demonstração (substituir pela API real)
+        // Simular dados para demonstração
         function loadSampleData() {
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date();
@@ -415,8 +416,11 @@
             ];
         }
 
-        // Carregar agendamentos (simular API)
+        // Carregar agendamentos
         async function loadAppointments() {
+            if (isLoading) return;
+            isLoading = true;
+            
             try {
                 // Simular delay de carregamento
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -424,32 +428,20 @@
                 // Em produção, substituir por chamada real à API
                 loadSampleData();
                 
-                displayBookedSlots();
                 return true;
             } catch (error) {
                 console.error('Erro ao carregar agendamentos:', error);
-                document.getElementById('bookedSlotsList').innerHTML = 
-                    '<p style="text-align: center; color: #ff6b6b;">Erro ao carregar agendamentos. Tente novamente.</p>';
                 return false;
+            } finally {
+                isLoading = false;
             }
         }
 
-        // Salvar agendamento (simular API)
+        // Salvar agendamento
         async function saveAppointment(appointmentData) {
             try {
                 // Simular delay de salvamento
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Em produção, aqui faria a chamada para o Google Sheets
-                /*
-                const response = await fetch(GOOGLE_SHEETS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(appointmentData)
-                });
-                */
                 
                 return true;
             } catch (error) {
@@ -487,7 +479,10 @@
         // Atualizar horários baseado na data selecionada
         function updateAvailableSlots() {
             const selectedDate = document.getElementById('appointmentDate').value;
-            if (!selectedDate) return;
+            if (!selectedDate) {
+                displayBookedSlots();
+                return;
+            }
 
             // Limpar seleções
             document.querySelectorAll('.time-slot').forEach(slot => {
@@ -578,6 +573,9 @@
             window.open(whatsappUrl, '_blank');
         }
 
+        // Event Listeners
+        document.getElementById('appointmentDate').addEventListener('change', updateAvailableSlots);
+
         // Processar formulário
         document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -646,7 +644,34 @@
                     });
 
                     // Atualizar displays
-                    displayBookedSlots();
                     updateAvailableSlots();
                 } else {
-                    throw
+                    throw new Error('Erro ao salvar agendamento');
+                }
+            } catch (error) {
+                alert('Erro ao agendar consulta. Tente novamente.');
+                console.error('Erro:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Definir data mínima como hoje
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').min = today;
+            
+            // Gerar horários
+            generateTimeSlots();
+            
+            // Carregar agendamentos
+            await loadAppointments();
+            
+            // Inicializar display
+            displayBookedSlots();
+        });
+    </script>
+</body>
+</html>
