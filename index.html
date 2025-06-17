@@ -136,7 +136,16 @@
             background: #ff6b6b;
             color: white;
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.8;
+            position: relative;
+        }
+
+        .time-slot.booked::after {
+            content: '❌ OCUPADO';
+            display: block;
+            font-size: 10px;
+            font-weight: bold;
+            margin-top: 2px;
         }
 
         .btn {
@@ -315,9 +324,9 @@
             </form>
 
             <div class="appointments-section">
-                <h3>Agendamentos do Dia</h3>
-                <div id="appointmentsList">
-                    <p style="text-align: center; color: #666; margin-top: 20px;">Nenhum agendamento para hoje.</p>
+                <h3>📅 Horários Ocupados Hoje</h3>
+                <div id="bookedSlotsList">
+                    <!-- Horários ocupados serão mostrados aqui -->
                 </div>
             </div>
         </div>
@@ -325,7 +334,27 @@
 
     <script>
         // Dados dos agendamentos armazenados em memória
-        let appointments = [];
+        let appointments = [
+            // Exemplo de agendamentos já existentes - adicione os reais aqui
+            {
+                id: 1,
+                patientName: 'João Silva',
+                phone: '(34) 99999-9999',
+                date: '2025-06-17',
+                time: '08:00',
+                treatment: 'fisioterapia-ortopedica',
+                observations: 'Dor no joelho'
+            },
+            {
+                id: 2,
+                patientName: 'Maria Santos',
+                phone: '(34) 88888-8888',
+                date: '2025-06-17',
+                time: '10:30',
+                treatment: 'pilates-clinico',
+                observations: ''
+            }
+        ];
         
         // Número do WhatsApp do Dr. Thiago
         const WHATSAPP_NUMBER = '5534991063450';
@@ -372,6 +401,7 @@
             // Limpar seleções
             document.querySelectorAll('.time-slot').forEach(slot => {
                 slot.classList.remove('selected', 'booked');
+                slot.textContent = slot.dataset.time;
             });
             document.getElementById('selectedTime').value = '';
 
@@ -381,39 +411,45 @@
                 const slot = document.querySelector(`[data-time="${apt.time}"]`);
                 if (slot) {
                     slot.classList.add('booked');
-                    slot.textContent = `${apt.time} - Ocupado`;
                 }
             });
+
+            // Atualizar lista de horários ocupados
+            displayBookedSlots();
         }
 
-        // Exibir agendamentos do dia
-        function displayTodayAppointments() {
-            const today = new Date().toISOString().split('T')[0];
-            const todayAppointments = appointments.filter(apt => apt.date === today);
-            const appointmentsList = document.getElementById('appointmentsList');
-
-            if (todayAppointments.length === 0) {
-                appointmentsList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Nenhum agendamento para hoje.</p>';
+        // Exibir horários ocupados do dia selecionado (para pacientes)
+        function displayBookedSlots() {
+            const selectedDate = document.getElementById('appointmentDate').value;
+            if (!selectedDate) {
+                document.getElementById('bookedSlotsList').innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Selecione uma data para ver os horários ocupados.</p>';
                 return;
             }
 
-            appointmentsList.innerHTML = todayAppointments.map((apt, index) => `
-                <div class="appointment-card">
+            const dayAppointments = appointments.filter(apt => apt.date === selectedDate);
+            const bookedSlotsList = document.getElementById('bookedSlotsList');
+
+            if (dayAppointments.length === 0) {
+                bookedSlotsList.innerHTML = '<p style="text-align: center; color: #4caf50; margin-top: 20px;">✅ Todos os horários estão disponíveis para esta data!</p>';
+                return;
+            }
+
+            const sortedAppointments = dayAppointments.sort((a, b) => a.time.localeCompare(b.time));
+
+            bookedSlotsList.innerHTML = sortedAppointments.map(apt => `
+                <div class="appointment-card" style="border-left-color: #ff6b6b;">
                     <div class="appointment-info">
                         <div class="appointment-details">
-                            <h4>${apt.patientName}</h4>
-                            <p><strong>Horário:</strong> ${apt.time} | <strong>Tratamento:</strong> ${apt.treatment}</p>
-                            <p><strong>Telefone:</strong> ${apt.phone}</p>
-                            ${apt.observations ? `<p><strong>Obs:</strong> ${apt.observations}</p>` : ''}
+                            <h4>⏰ ${apt.time} - OCUPADO</h4>
+                            <p><strong>Tratamento:</strong> ${getTreatmentName(apt.treatment)}</p>
                         </div>
-                        <button class="delete-btn" onclick="deleteAppointment(${apt.id})">Cancelar</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Função para enviar para WhatsApp
-        function sendToWhatsApp(appointmentData) {
+        // Função para converter código do tratamento em nome legível
+        function getTreatmentName(treatmentCode) {
             const treatmentNames = {
                 'fisioterapia-ortopedica': 'Fisioterapia Ortopédica',
                 'fisioterapia-neurologica': 'Fisioterapia Neurológica',
@@ -423,8 +459,12 @@
                 'massoterapia': 'Massoterapia',
                 'avaliacao-inicial': 'Avaliação Inicial'
             };
+            return treatmentNames[treatmentCode] || treatmentCode;
+        }
 
-            const treatmentName = treatmentNames[appointmentData.treatment] || appointmentData.treatment;
+        // Função para enviar para WhatsApp
+        function sendToWhatsApp(appointmentData) {
+            const treatmentName = getTreatmentName(appointmentData.treatment);
             const formattedDate = new Date(appointmentData.date + 'T00:00:00').toLocaleDateString('pt-BR');
             
             let message = `🏥 *NOVO AGENDAMENTO - DR. THIAGO FISIOTERAPIA*\n\n`;
@@ -446,14 +486,8 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Deletar agendamento
-        function deleteAppointment(id) {
-            if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
-                appointments = appointments.filter(apt => apt.id !== id);
-                displayTodayAppointments();
-                updateAvailableSlots();
-            }
-        }
+        // Deletar agendamento (função removida para pacientes)
+        // Esta função foi removida pois pacientes não devem cancelar agendamentos de outros
 
         // Processar formulário
         document.getElementById('appointmentForm').addEventListener('submit', function(e) {
@@ -507,7 +541,7 @@
             });
 
             // Atualizar displays
-            displayTodayAppointments();
+            displayBookedSlots();
             updateAvailableSlots();
         });
 
@@ -522,7 +556,7 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('appointmentDate').min = today;
             
-            displayTodayAppointments();
+            displayBookedSlots();
         });
     </script>
 </body>
